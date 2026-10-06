@@ -1,15 +1,15 @@
 "use strict";
 // ===== 運営設定（秘密情報はここに置かない） =====
 const CONFIG = {
-  mode: "demo", // demo: このブラウザ内だけ / gas: GASに接続
-  gasUrl: "", // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+  mode: "gas", // demo: このブラウザ内だけ / gas: GASに接続
+  gasUrl: "https://script.google.com/macros/s/AKfycbzC-1WIQgFEJoKieocgOt9pcHwRRGf6PChFCzpL9VFrO3LqQVhkk2zZsCb-En8Gq5mB/exec", // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
   readOnly: false,
   startsAt: "", // 空欄=制限なし。例: 2026-10-01T00:00:00+09:00
   endsAt: "", // 終了時刻は含まない。例: 2026-12-07T00:00:00+09:00
   contact: "運営連絡先を設定してください",
   types: {
     general: {label:"一般参加者", maxChars:150, passwordRequired:false, styles:["speech","comic","sticky","poster","hero"]},
-    member: {label:"フラスタ企画メンバー", maxChars:400, passwordRequired:false, styles:["speech","comic","sticky","poster","hero","special"]}
+    member: {label:"フラスタ企画メンバー", maxChars:400, passwordRequired:true, styles:["speech","comic","sticky","poster","hero","special"]}
   },
   styles: {speech:"吹き出し",comic:"コミックコマ",sticky:"付箋",poster:"学園祭ポスター",hero:"HERO CARD",special:"SPECIAL MESSAGE"}
 };
