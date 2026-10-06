@@ -9,7 +9,7 @@ const CONFIG = {
   contact: "運営連絡先を設定してください",
   types: {
     general: {label:"一般参加者", maxChars:150, passwordRequired:false, styles:["speech","comic","sticky","poster","hero"]},
-    member: {label:"フラスタ企画メンバー", maxChars:400, passwordRequired:false, styles:["speech","comic","sticky","poster","hero","special"]}
+    member: {label:"フラスタ企画メンバー", maxChars:400, passwordRequired:true, styles:["speech","comic","sticky","poster","hero","special"]}
   },
   styles: {speech:"吹き出し",comic:"コミックコマ",sticky:"付箋",poster:"学園祭ポスター",hero:"HERO CARD",special:"SPECIAL MESSAGE"}
 };
