@@ -1,8 +1,8 @@
 "use strict";
 // ===== 運営設定（秘密情報はここに置かない） =====
 const CONFIG = {
-  mode: "demo", // demo: このブラウザ内だけ / gas: GASに接続
-  gasUrl: "", // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
+  mode: "gas", // demo: このブラウザ内だけ / gas: GASに接続
+  gasUrl: "https://script.google.com/macros/s/AKfycbzC-1WIQgFEJoKieocgOt9pcHwRRGf6PChFCzpL9VFrO3LqQVhkk2zZsCb-En8Gq5mB/exec", // https://script.google.com/macros/s/DEPLOYMENT_ID/exec
   readOnly: false,
   startsAt: "", // 空欄=制限なし。例: 2026-10-01T00:00:00+09:00
   endsAt: "", // 終了時刻は含まない。例: 2026-12-07T00:00:00+09:00
