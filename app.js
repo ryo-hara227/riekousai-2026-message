@@ -17,7 +17,11 @@ const $ = id => document.getElementById(id);
 const lengthOf = text => Array.from(text).length; // Unicodeコードポイント単位
 const STORAGE = "riekousai-2026-demo-v1";
 const samples = Object.keys(CONFIG.styles).map((style,i)=>({id:"sample-"+i,penName:["ありがとう係","青空","放課後のりえ高生","応援団","HERO FAN","フラスタ企画メンバー"][i],message:["いつも元気をもらっています。\nありがとうの気持ちが届きますように！","笑顔いっぱいの一日になりますように！","日頃の感謝を、一枚の付箋に。\nこれからも応援しています。","みんなの想いで、にぎやかな文化祭に！","あなたの声に何度も勇気をもらいました。","大切な仲間と一緒に、応援の気持ちを届けます。"][i],memberType:style==="special"?"member":"general",cardStyle:style}));
-let messages=[], busy=false;
+let messages=[], busy=false, loadSequence=0;
+// メッセージ一覧だけを15秒間保存。コードのキャッシュ対策とは別です。
+const WALL_CACHE = "riekousai-wall:" + CONFIG.gasUrl;
+function cacheWall(){try{sessionStorage.setItem(WALL_CACHE,JSON.stringify({at:Date.now(),messages}));}catch{}}
+function restoreWall(){try{const c=JSON.parse(sessionStorage.getItem(WALL_CACHE));if(c&&Date.now()-c.at>=0&&Date.now()-c.at<15000&&Array.isArray(c.messages)){messages=c.messages;render();return true;}}catch{}return false;}
 function card(data){
   const style=Object.hasOwn(CONFIG.styles,data.cardStyle)?data.cardStyle:"speech";
   const el=document.createElement("article");el.className="card card-"+style;
@@ -45,24 +49,41 @@ function updateForm(resetStyles=false){
 }
 function render(){const filter=$("filter").value;const shown=messages.filter(m=>filter==="all"||m.memberType===filter);$("cards").replaceChildren(...shown.map(card));$("wall-status").textContent=`${shown.length}枚のカード${CONFIG.mode==="demo"?"（サンプル・この端末のデモ投稿）":""}`;if(!shown.length)$("wall-status").textContent="まだ表示できるメッセージはありません。";}
 function localMessages(){try{const data=JSON.parse(localStorage.getItem(STORAGE)||"[]");return Array.isArray(data)?data.filter(x=>x&&typeof x.message==="string"&&typeof x.penName==="string"):[];}catch{return [];}}
-async function api(payload){
+async function api(payload, fresh=false){
   if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(CONFIG.gasUrl))throw new Error("GAS URLを設定してください。");
   const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),20000);
-  try{const response=await fetch(CONFIG.gasUrl+(payload?"":"?action=list"),{method:payload?"POST":"GET",body:payload?new URLSearchParams(payload):undefined,credentials:"omit",signal:controller.signal,redirect:"follow"});if(!response.ok)throw new Error("APIとの通信に失敗しました。");const result=await response.json();if(!result.ok)throw new Error(result.error||"処理に失敗しました。");return result;}finally{clearTimeout(timer);}
+  try{const response=await fetch(CONFIG.gasUrl+(payload?"":"?action=list"+(fresh?"&fresh=1":"")),{method:payload?"POST":"GET",body:payload?new URLSearchParams(payload):undefined,credentials:"omit",signal:controller.signal,redirect:"follow"});if(!response.ok)throw new Error("APIとの通信に失敗しました。");const result=await response.json();if(!result.ok)throw new Error(result.error||"処理に失敗しました。");return result;}finally{clearTimeout(timer);}
 }
-async function load(){ $("reload").disabled=true;$("wall-status").textContent="読み込み中…";try{messages=CONFIG.mode==="demo"?[...samples,...localMessages()]: (await api()).messages;if(!Array.isArray(messages))throw new Error("APIの応答形式を確認してください。");render();}catch(e){$("wall-status").textContent="読み込めませんでした。設定・通信を確認して再読み込みしてください。";}finally{$("reload").disabled=false;}}
+async function load(fresh=false){
+  const sequence=++loadSequence;
+  $("reload").disabled=true;
+  $("wall-status").textContent=messages.length?"表示中のカードを更新しています…":"メッセージを読み込んでいます…";
+  try{
+    const next=CONFIG.mode==="demo"?[...samples,...localMessages()]:(await api(undefined,fresh)).messages;
+    if(sequence!==loadSequence)return;
+    if(!Array.isArray(next))throw new Error("APIの応答形式を確認してください。");
+    messages=next;render();if(CONFIG.mode==="gas")cacheWall();
+  }catch(e){
+    if(sequence!==loadSequence)return;
+    $("wall-status").textContent=messages.length?"最新情報を取得できませんでした。表示中のカードは更新前の内容です。再読み込みしてください。":"読み込めませんでした。設定・通信を確認して再読み込みしてください。";
+  }finally{if(sequence===loadSequence)$("reload").disabled=false;}
+}
 Object.entries(CONFIG.types).forEach(([key,type])=>{$("memberType").add(new Option(type.label,key));$("filter").add(new Option(type.label,key));});
 $("contact").textContent=CONFIG.contact;
-$("mode-note").textContent=CONFIG.mode==="demo"?"デモ版：送信内容はこのブラウザ内だけに保存され、運営には届きません。メンバー区分は自己申告です。":"送信後、運営の確認を経て掲載されます。";
-$("memberType").addEventListener("change",()=>updateForm(true));["penName","message","cardStyle"].forEach(id=>$(id).addEventListener("input",()=>updateForm()));$("filter").addEventListener("change",render);$("reload").addEventListener("click",load);
+$("mode-note").textContent=CONFIG.mode==="demo"?"デモ版：送信内容はこのブラウザ内だけに保存され、運営には届きません。メンバー区分は自己申告です。":"送信したメッセージはすぐに掲載されます。運営判断で非表示にする場合があります。";
+$("memberType").addEventListener("change",()=>updateForm(true));["penName","message","cardStyle"].forEach(id=>$(id).addEventListener("input",()=>updateForm()));$("filter").addEventListener("change",render);$("reload").addEventListener("click",()=>load(true));
 $("message-form").addEventListener("submit",async event=>{
   event.preventDefault();updateAvailability();if(busy||availability())return;
   const payload={penName:$("penName").value.trim(),message:$("message").value.trim(),memberType:$("memberType").value,cardStyle:$("cardStyle").value,password:$("password").value,consent:"true",requestId:crypto.randomUUID()};
   if(!payload.penName||lengthOf(payload.penName)>30||!payload.message){$("feedback").textContent="ペンネーム（30文字以内）とメッセージを入力してください。";return;}
+  let pending=false;
   busy=true;updateAvailability();$("feedback").textContent="送信中…";
-  try{if(CONFIG.mode==="demo"){const {password,consent,...saved}=payload;localStorage.setItem(STORAGE,JSON.stringify([...localMessages(),saved]));}else{await api(payload);}
-    $("message-form").reset();updateForm(true);$("feedback").textContent=CONFIG.mode==="demo"?"このブラウザにデモ投稿を保存しました。運営には送信されていません。":"受け付けました。確認後に掲載されます。";await load();
+  try{if(CONFIG.mode==="demo"){const {password,consent,...saved}=payload;localStorage.setItem(STORAGE,JSON.stringify([...localMessages(),saved]));}else{
+      const result=await api(payload);pending=result.pending===true;
+      if(result.message&&!pending){++loadSequence;$("reload").disabled=false;messages.push(result.message);render();cacheWall();}
+    }
+    $("message-form").reset();updateForm(true);$("feedback").textContent=CONFIG.mode==="demo"?"このブラウザにデモ投稿を保存しました。運営には送信されていません。":(pending?"受け付けました。確認後に掲載されます。":"メッセージを掲載しました。");void load(true);
   }catch(e){$("feedback").textContent=`送信結果を確認できませんでした：${e.name==="AbortError"?"通信がタイムアウトしました。":e.message} GASモードでは保存済みの可能性があります。再送前に運営へ確認してください。`;}
   finally{busy=false;updateAvailability();}
 });
-updateForm(true);updateAvailability();setInterval(updateAvailability,30000);load();
+updateForm(true);updateAvailability();setInterval(updateAvailability,30000);if(CONFIG.mode==="gas")restoreWall();void load();
