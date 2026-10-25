@@ -8,8 +8,7 @@ const CONFIG = {
   endsAt: "", // 終了時刻は含まない。例: 2026-12-07T00:00:00+09:00
   contact: "運営連絡先を設定してください",
   types: {
-    general: {label:"一般参加者", maxChars:150, passwordRequired:false, styles:["speech","comic","sticky","poster","hero"]},
-    member: {label:"フラスタ企画メンバー", maxChars:400, passwordRequired:true, styles:["speech","comic","sticky","poster","hero","special"]}
+    general: {label:"参加者", maxChars:100, styles:["speech","comic","sticky","poster","hero","special"]}
   },
   styles: {speech:"吹き出し",comic:"コミックコマ",sticky:"付箋",poster:"学園祭ポスター",hero:"HERO CARD",special:"SPECIAL MESSAGE"}
 };
@@ -27,7 +26,7 @@ function card(data){
   const el=document.createElement("article");el.className="card card-"+style;
   const tag=document.createElement("span");tag.className="card-label";tag.textContent=CONFIG.styles[style];
   const content=document.createElement("p");content.textContent=String(data.message||"");
-  const footer=document.createElement("footer");footer.textContent=String(data.penName||"名無し")+" / "+(CONFIG.types[data.memberType]?.label||"参加者");
+  const footer=document.createElement("footer");footer.textContent=String(data.penName||"名無し");
   el.append(tag,content,footer);return el; // 投稿HTMLを解釈しない
 }
 function availability(){
@@ -40,14 +39,13 @@ function availability(){
 }
 function updateAvailability(){const reason=availability();$("form-fields").disabled=busy||Boolean(reason);$("period-note").textContent=reason||"投稿受付中です。";$("write-link").hidden=Boolean(reason);}
 function updateForm(resetStyles=false){
-  const type=CONFIG.types[$("memberType").value];
-  if(resetStyles){$("cardStyle").replaceChildren(...type.styles.map(key=>new Option(CONFIG.styles[key],key)));$("password").value="";}
-  $("password-row").hidden=!type.passwordRequired;$("password").required=type.passwordRequired;
+  const type=CONFIG.types.general;
+  if(resetStyles){$("cardStyle").replaceChildren(...type.styles.map(key=>new Option(CONFIG.styles[key],key)));}
   const n=lengthOf($("message").value);$("count").textContent=`${n} / ${type.maxChars}文字`;
   $("message").setCustomValidity(n>type.maxChars?`メッセージは${type.maxChars}文字までです。`:"");
-  $("preview").replaceChildren(card({penName:$("penName").value||"あなたのペンネーム",message:$("message").value||"ここにあなたの想いが入ります。",memberType:$("memberType").value,cardStyle:$("cardStyle").value}));
+  $("preview").replaceChildren(card({penName:$("penName").value||"あなたのペンネーム",message:$("message").value||"ここにあなたの想いが入ります。",memberType:"general",cardStyle:$("cardStyle").value}));
 }
-function render(){const filter=$("filter").value;const shown=messages.filter(m=>filter==="all"||m.memberType===filter);$("cards").replaceChildren(...shown.map(card));$("wall-status").textContent=`${shown.length}枚のカード${CONFIG.mode==="demo"?"（サンプル・この端末のデモ投稿）":""}`;if(!shown.length)$("wall-status").textContent="まだ表示できるメッセージはありません。";}
+function render(){const shown=messages;$("cards").replaceChildren(...shown.map(card));$("wall-status").textContent=`${shown.length}枚のカード${CONFIG.mode==="demo"?"（サンプル・この端末のデモ投稿）":""}`;if(!shown.length)$("wall-status").textContent="まだ表示できるメッセージはありません。";}
 function localMessages(){try{const data=JSON.parse(localStorage.getItem(STORAGE)||"[]");return Array.isArray(data)?data.filter(x=>x&&typeof x.message==="string"&&typeof x.penName==="string"):[];}catch{return [];}}
 async function api(payload, fresh=false){
   if(!/^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(CONFIG.gasUrl))throw new Error("GAS URLを設定してください。");
@@ -68,17 +66,16 @@ async function load(fresh=false){
     $("wall-status").textContent=messages.length?"最新情報を取得できませんでした。表示中のカードは更新前の内容です。再読み込みしてください。":"読み込めませんでした。設定・通信を確認して再読み込みしてください。";
   }finally{if(sequence===loadSequence)$("reload").disabled=false;}
 }
-Object.entries(CONFIG.types).forEach(([key,type])=>{$("memberType").add(new Option(type.label,key));$("filter").add(new Option(type.label,key));});
 $("contact").textContent=CONFIG.contact;
-$("mode-note").textContent=CONFIG.mode==="demo"?"デモ版：送信内容はこのブラウザ内だけに保存され、運営には届きません。メンバー区分は自己申告です。":"送信したメッセージはすぐに掲載されます。運営判断で非表示にする場合があります。";
-$("memberType").addEventListener("change",()=>updateForm(true));["penName","message","cardStyle"].forEach(id=>$(id).addEventListener("input",()=>updateForm()));$("filter").addEventListener("change",render);$("reload").addEventListener("click",()=>load(true));
+$("mode-note").textContent=CONFIG.mode==="demo"?"デモ版：送信内容はこのブラウザ内だけに保存され、運営には届きません。":"送信したメッセージはすぐに掲載されます。運営判断で非表示にする場合があります。";
+["penName","message","cardStyle"].forEach(id=>$(id).addEventListener("input",()=>updateForm()));$("reload").addEventListener("click",()=>load(true));
 $("message-form").addEventListener("submit",async event=>{
   event.preventDefault();updateAvailability();if(busy||availability())return;
-  const payload={penName:$("penName").value.trim(),message:$("message").value.trim(),memberType:$("memberType").value,cardStyle:$("cardStyle").value,password:$("password").value,consent:"true",requestId:crypto.randomUUID()};
+  const payload={penName:$("penName").value.trim(),message:$("message").value.trim(),memberType:"general",cardStyle:$("cardStyle").value,consent:"true",requestId:crypto.randomUUID()};
   if(!payload.penName||lengthOf(payload.penName)>30||!payload.message){$("feedback").textContent="ペンネーム（30文字以内）とメッセージを入力してください。";return;}
   let pending=false;
   busy=true;updateAvailability();$("feedback").textContent="送信中…";
-  try{if(CONFIG.mode==="demo"){const {password,consent,...saved}=payload;localStorage.setItem(STORAGE,JSON.stringify([...localMessages(),saved]));}else{
+  try{if(CONFIG.mode==="demo"){const {consent,...saved}=payload;localStorage.setItem(STORAGE,JSON.stringify([...localMessages(),saved]));}else{
       const result=await api(payload);pending=result.pending===true;
       if(result.message&&!pending){++loadSequence;$("reload").disabled=false;messages.push(result.message);render();cacheWall();}
     }
