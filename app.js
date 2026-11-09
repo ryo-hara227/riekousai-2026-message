@@ -66,7 +66,6 @@ async function load(fresh=false){
     $("wall-status").textContent=messages.length?"最新情報を取得できませんでした。表示中のカードは更新前の内容です。再読み込みしてください。":"読み込めませんでした。設定・通信を確認して再読み込みしてください。";
   }finally{if(sequence===loadSequence)$("reload").disabled=false;}
 }
-$("contact").textContent=CONFIG.contact;
 $("mode-note").textContent=CONFIG.mode==="demo"?"デモ版：送信内容はこのブラウザ内だけに保存され、運営には届きません。":"送信したメッセージはすぐに掲載されます。運営判断で非表示にする場合があります。";
 ["penName","message","cardStyle"].forEach(id=>$(id).addEventListener("input",()=>updateForm()));$("reload").addEventListener("click",()=>load(true));
 $("message-form").addEventListener("submit",async event=>{
