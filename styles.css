@@ -4,3 +4,208 @@
 @media(min-width:700px){.background{background-image:var(--bg-desktop),radial-gradient(circle,#17233822 1.5px,transparent 1.5px),linear-gradient(140deg,#ffe881,#f4c344 55%,#92bdce)}.cover{padding:3rem}.panel{padding:2.5rem}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.stamp{display:block;position:absolute;right:3rem;top:9rem;transform:rotate(10deg);font-size:2.3rem;line-height:1.1;font-weight:950;background:var(--yellow);border:4px solid var(--ink);padding:1.7rem;border-radius:50%;box-shadow:6px 6px 0 var(--ink)}}
 @media(min-width:1000px){.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+/* ここから styles.css の最終行へ追記：メッセージカード6種 */
+
+/* 各カードは見出し／本文／投稿者名の順。高さは本文に合わせます。 */
+.card.card-speech,
+.card.card-comic,
+.card.card-sticky,
+.card.card-poster,
+.card.card-hero,
+.card.card-special {
+  position: relative;
+  isolation: isolate;
+  overflow: visible;
+  padding: 1.25rem;
+}
+
+/* 01｜吹き出し：白い丸枠と左下のしっぽ */
+.card.card-speech {
+  --speech-paper: #ffffff; /* 吹き出しの地色 */
+  background: var(--speech-paper);
+  border: 2px solid var(--ink);
+  border-radius: 30px 30px 30px 12px;
+  box-shadow: 4px 4px 0 #17233825;
+  margin-bottom: .65rem;
+}
+.card-speech::after {
+  content: "";
+  position: absolute;
+  left: 1.4rem;
+  bottom: -.57rem;
+  width: 1rem;
+  height: 1rem;
+  background: var(--speech-paper);
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+.card-speech .card-label {
+  color: #174a8b;
+  background: #e5f0ff;
+  border-radius: 999px;
+  padding: .2rem .6rem;
+}
+
+/* 02｜コミックコマ：網点を上端だけに置き、太枠と番号札風の帯を付ける */
+.card.card-comic {
+  --comic-band: #ffe34b; /* 網点の帯の色 */
+  padding-top: 1.6rem;
+  background:
+    radial-gradient(circle, #1723385c 1px, transparent 1.4px) top left / 7px 7px repeat-x,
+    linear-gradient(var(--comic-band), var(--comic-band)) top / 100% .65rem no-repeat,
+    #ffffff;
+  border: 4px solid var(--ink);
+  border-radius: 0;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+.card-comic .card-label {
+  display: inline-block;
+  padding: .15rem .55rem;
+  background: var(--ink);
+  color: #ffffff;
+  transform: skewX(-6deg);
+}
+.card-comic footer { border-top: 2px solid var(--ink); }
+
+/* 03｜付箋：黄色い紙、マスキングテープ、右下の折り目 */
+.card.card-sticky {
+  --sticky-paper: #fff09f; /* 付箋の色 */
+  margin-top: .45rem;
+  padding-top: 1.45rem;
+  background: var(--sticky-paper);
+  border: 1px solid #ad8a33;
+  border-radius: 1px;
+  box-shadow: 2px 6px 8px #17233829;
+}
+.card-sticky::before,
+.card-sticky::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+.card-sticky::before {
+  top: -.53rem;
+  left: calc(50% - 2.1rem);
+  width: 4.2rem;
+  height: 1.15rem;
+  transform: rotate(-6deg);
+  background: repeating-linear-gradient(110deg, #c09ad4df 0 6px, #e4c9f1df 6px 12px);
+}
+.card-sticky::after {
+  right: 0;
+  bottom: 0;
+  width: 1.05rem;
+  height: 1.05rem;
+  background: linear-gradient(135deg, #e6c25e 50%, #fffdf5 51%);
+}
+.card-sticky .card-label { color: #6a4c14; }
+.card-sticky footer { border-top-color: #b49646; }
+
+/* 04｜学園祭ポスター：中央の画びょう、赤い題字、下部のミシン目 */
+.card.card-poster {
+  --poster-red: #a92336; /* 見出し帯と画びょうの色 */
+  padding-top: 1.75rem;
+  background: #fff9ed;
+  border: 2px solid var(--poster-red);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 5px #f7e6c9, 3px 4px 0 #a9233629;
+}
+.card-poster::before {
+  content: "";
+  position: absolute;
+  top: .37rem;
+  left: calc(50% - .29rem);
+  width: .58rem;
+  height: .58rem;
+  border-radius: 50%;
+  background: var(--poster-red);
+  box-shadow: 1px 2px 0 #17233855;
+  pointer-events: none;
+}
+.card-poster .card-label {
+  display: block;
+  padding: .2rem .4rem;
+  color: #ffffff;
+  background: var(--poster-red);
+  text-align: center;
+}
+.card-poster footer { border-top: 2px dashed #ba6a64; }
+
+/* 05｜HERO CARD：紺の外枠、星章、白い本文欄、投稿者のプレート */
+.card.card-hero {
+  --hero-frame: #123165; /* 外枠と投稿者プレートの色 */
+  padding: .85rem;
+  color: #ffffff;
+  background: var(--hero-frame);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 2px #f5c95b, 4px 4px 0 #17233835;
+}
+.card-hero .card-label {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  color: #ffe68f;
+}
+.card-hero .card-label::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  background: currentColor;
+  clip-path: polygon(50% 0, 64% 34%, 100% 38%, 73% 63%, 81% 100%, 50% 81%, 19% 100%, 27% 63%, 0 38%, 36% 34%);
+}
+.card-hero p {
+  color: var(--ink);
+  background: #f1f6ff;
+  border-radius: 6px;
+  padding: .65rem .75rem;
+  margin: .55rem 0;
+}
+.card-hero footer {
+  border-top: 0;
+  background: #ffffff1a;
+  color: #ffffff;
+  border-radius: 4px;
+  padding: .15rem .5rem;
+  margin-top: .35rem;
+}
+
+/* 06｜SPECIAL MESSAGE：金の二重枠、落ち着いた紙色と記念印 */
+.card.card-special {
+  --special-gold: #91601e; /* 二重枠と記念印の色 */
+  color: #39270f;
+  background: #fff7e6;
+  border: 6px double var(--special-gold);
+  border-radius: 3px;
+  box-shadow: 4px 4px 0 #91601e29;
+}
+.card-special .card-label {
+  display: block;
+  color: #633b12;
+  text-align: center;
+  border-bottom: 1px solid #c19b61;
+  padding-bottom: .3rem;
+}
+.card-special::after {
+  content: "";
+  position: absolute;
+  right: .75rem;
+  bottom: .52rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  background: radial-gradient(circle, var(--special-gold) 18%, transparent 20%);
+  border: 3px double var(--special-gold);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.card-special footer {
+  border-top: 1px solid #c19b61;
+  padding-right: 1.65rem;
+}
+
+/* ここまで：メッセージカード6種 */
+
