@@ -209,3 +209,6 @@
 
 /* ここまで：メッセージカード6種 */
 
+#cards .card-label {
+  display: none;
+}
