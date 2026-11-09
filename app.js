@@ -6,7 +6,7 @@ const CONFIG = {
   readOnly: false,
   startsAt: "", // 空欄=制限なし。例: 2026-10-01T00:00:00+09:00
   endsAt: "", // 終了時刻は含まない。例: 2026-12-07T00:00:00+09:00
-  contact: "運営連絡先を設定してください",
+  contact: "https://x.com/ryokara1306",
   types: {
     general: {label:"参加者", maxChars:100, styles:["speech","comic","sticky","poster","hero","special"]}
   },
